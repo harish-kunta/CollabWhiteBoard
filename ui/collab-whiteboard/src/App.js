@@ -11,6 +11,10 @@ import {
   getElementAtPosition,
 } from "./components/Element";
 
+var io = require("socket.io-client");
+
+var socket = io('http://localhost:8080', { transports : ['websocket'] });
+
 function App() {
   const [points, setPoints] = useState([]);
   const [path, setPath] = useState([]);
@@ -27,9 +31,23 @@ function App() {
   const [width, setWidth] = useState(1);
   const [shapeWidth, setShapeWidth] = useState(1);
   const [popped, setPopped] = useState(false);
+  var timeout;
+  var root = this;
+  var canvas;
 
   useEffect(() => {
-    const canvas = document.getElementById("canvas");
+    socket.on('draw', (data) => {
+      console.log("Received data from server");
+      var image = new Image();
+      var canvas = document.querySelector('#canvas');
+      var context = canvas.getContext('2d');
+      image.onload = function() {
+        context.drawImage(image, 0, 0);
+      }
+      image.src = data;
+    });
+
+    canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
     context.lineCap = "round";
     context.lineJoin = "round";
@@ -54,6 +72,7 @@ function App() {
           );
           context.lineTo(point.clientX, point.clientY);
           context.stroke();
+          sendDataToServer(canvas);
         });
         context.closePath();
         context.save();
@@ -233,6 +252,7 @@ function App() {
       context.quadraticCurveTo(clientX, clientY, midPoint.x, midPoint.y);
       context.lineTo(clientX, clientY);
       context.stroke();
+      sendDataToServer(canvas);
     } else if (action === "drawing") {
       const index = elements.length - 1;
       const { x1, y1 } = elements[index];
@@ -308,6 +328,15 @@ function App() {
     }
     setAction("none");
   };
+
+  const sendDataToServer = (canvas) => {
+    console.log("Sent data to server");
+    if(timeout != undefined) clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      var img = canvas.toDataURL('image/png');
+      socket.emit('draw', img);
+    }, 1000);
+  }
 
   return (
     <div>
