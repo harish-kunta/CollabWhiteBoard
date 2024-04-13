@@ -4,6 +4,8 @@ var io = require('socket.io')(http);
 
 let connectedUsers = [];
 
+app.get('/', (req, res) => { res.sendFile(__dirname + '/public/index.html'); });
+
 io.on('connection', (socket) => {
     console.log('Socket ID connected:', socket.id);
     connectedUsers.push(socket);
