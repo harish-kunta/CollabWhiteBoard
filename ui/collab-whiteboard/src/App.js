@@ -13,7 +13,7 @@ import {
 
 var io = require("socket.io-client");
 
-var socket = io('http://localhost:8080', { transports : ['websocket'] });
+var socket = io('https://collabwhiteboard.onrender.com/', { transports : ['websocket'] });
 
 function App() {
   const [points, setPoints] = useState([]);
